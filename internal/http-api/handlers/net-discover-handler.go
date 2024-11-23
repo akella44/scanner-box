@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"scanner-box/internal/models"
@@ -14,13 +13,6 @@ import (
 )
 
 func HostDiscoveryScanHandler(c *gin.Context) {
-	var bodyBytes []byte
-	if c.Request.Body != nil {
-		bodyBytes, _ = io.ReadAll(c.Request.Body)
-	}
-
-	log.Printf("Request Body: %s", string(bodyBytes))
-
 	var req models.DiscoveryScanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "Invalid request payload"})
