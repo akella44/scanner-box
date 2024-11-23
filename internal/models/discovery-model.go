@@ -14,7 +14,7 @@ type Asset struct {
 }
 
 type DiscoveryScanRequest struct {
-	AssetID string   `json:"asset_id"`
+	AssetID int      `json:"asset_id"`
 	Targets []string `json:"targets"`
 }
 

@@ -24,7 +24,7 @@ func ParseAssets(inputs []string) (map[models.TargetType][]string, error) {
 
 		assetType, err := determineAssetType(trimmed)
 		if err != nil {
-			log.Printf("Предупреждение: %v. Строка '%s' будет пропущена.", err, trimmed)
+			log.Printf("Warning: %v. String '%s' will be skipped.", err, trimmed)
 			continue
 		}
 
