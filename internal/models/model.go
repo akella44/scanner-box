@@ -39,14 +39,14 @@ const (
 type VulnerScanOutputItem struct {
 	IP            string    `json:"ip"`
 	Port          uint16    `json:"port"`
-	Service       string    `json:"service"`
+	Service       string    `json:"service,omitempty"`
 	Protocol      Protocol  `json:"protocol"`
-	CPE           string    `json:"cpe"`
+	CPE           string    `json:"cpe,omitempty"`
 	CVEidentifier string    `json:"cve_identifier"`
 	CVSS          float64   `json:"cvss"`
-	Title         string    `json:"title"`
-	Description   string    `json:"description"`
-	Exploits      []Exploit `json:"exploits"`
+	Title         string    `json:"title,omitempty"`
+	Description   string    `json:"description,omitempty"`
+	Exploits      []Exploit `json:"exploits,omitempty"`
 }
 
 type Exploit struct {
