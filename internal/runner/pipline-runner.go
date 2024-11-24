@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"scanner-box/internal/core"
@@ -202,7 +202,7 @@ func RunVulnersScan(ctx context.Context, portsCount int, ips []string, fn core.H
 		}
 	}
 
-	progress := make(chan float32, 1)
+	progress := make(chan float32, len(allResults))
 
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
@@ -222,15 +222,36 @@ func RunVulnersScan(ctx context.Context, portsCount int, ips []string, fn core.H
 		}
 	}()
 
-	for i := range allResults {
-		description, err := fetchCveDescription(allResults[i].CVEidentifier)
-		if err != nil {
-			continue
-		}
-		allResults[i].Description = description
-		progress <- (float32)(i / len(allResults))
+	type Result struct {
+		Index       int
+		Description string
 	}
 
+	resultsCh := make(chan Result, len(allResults))
+	var wgFetch sync.WaitGroup
+
+	for i := range allResults {
+		i := i
+		wgFetch.Add(1)
+		go func() {
+			defer wgFetch.Done()
+			description, err := fetchCveDescription(allResults[i].CVEidentifier)
+			if err != nil {
+				log.Printf("Failed during fetch cve description %v", err)
+				return
+			}
+			resultsCh <- Result{Index: i, Description: description}
+			progress <- (float32)(i / len(allResults))
+
+		}()
+	}
+	go func() {
+		wgFetch.Wait()
+		close(resultsCh)
+	}()
+	for result := range resultsCh {
+		allResults[result.Index].Description = result.Description
+	}
 	return allResults, firstErr
 }
 
@@ -255,7 +276,7 @@ func fetchCveDescription(cveID string) (string, error) {
 		return "", fmt.Errorf("API responded with status code: %d", resp.StatusCode)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read API response: %v", err)
 	}
