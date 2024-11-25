@@ -14,14 +14,14 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	viper.SetDefault("port", "8080")
+	viper.SetDefault("port", "9000")
 	viper.SetDefault("api_base_url", "http://localhost:8000")
 
 	viper.AutomaticEnv()
 
 	viper.SetConfigName("cfg")
 	viper.SetConfigType("yml")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("..")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Printf("No config file found, using environment variables: %v", err)
