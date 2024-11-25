@@ -9,7 +9,7 @@ import (
 type Config struct {
 	Port              string `mapstructure:"port"`
 	BackendAPIBaseURL string `mapstructure:"api_base_url"`
-	JWTAuthToken      string `mapstructure:"jwt_secret"`
+	ApiKey            string `mapstructure:"api_key"`
 	PoolSize          int    `mapstructure:"pool_size"`
 }
 
@@ -21,7 +21,7 @@ func LoadConfig() (*Config, error) {
 
 	viper.SetConfigName("cfg")
 	viper.SetConfigType("yml")
-	viper.AddConfigPath("..")
+	viper.AddConfigPath(".")
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Printf("No config file found, using environment variables: %v", err)
@@ -32,7 +32,7 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
-	if config.JWTAuthToken == "" {
+	if config.ApiKey == "" {
 		log.Fatal("JWT token is required")
 	}
 

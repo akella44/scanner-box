@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand/v2"
 	"net/http"
 	"scanner-box/internal/core"
 	"scanner-box/internal/models"
@@ -230,11 +231,16 @@ func RunVulnersScan(ctx context.Context, portsCount int, ips []string, fn core.H
 	resultsCh := make(chan Result, len(allResults))
 	var wgFetch sync.WaitGroup
 
+	semaphore := make(chan struct{}, (int)(len(allResults)/3))
+
 	for i := range allResults {
 		i := i
 		wgFetch.Add(1)
 		go func() {
 			defer wgFetch.Done()
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+			time.Sleep(time.Duration(rand.IntN(1000)+1000) * time.Millisecond)
 			description, err := fetchCveDescription(allResults[i].CVEidentifier)
 			if err != nil {
 				log.Printf("Failed during fetch cve description %v", err)
@@ -242,7 +248,6 @@ func RunVulnersScan(ctx context.Context, portsCount int, ips []string, fn core.H
 			}
 			resultsCh <- Result{Index: i, Description: description}
 			progress <- (float32)(i / len(allResults))
-
 		}()
 	}
 	go func() {
@@ -265,7 +270,9 @@ func fetchCveDescription(cveID string) (string, error) {
 
 	req.Header.Set("Accept", "application/json")
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute HTTP request: %v", err)

@@ -29,9 +29,11 @@ func (h *Handler) HostDiscoveryScanHandler(c *gin.Context) {
 		return
 	}
 
+	apiKey := h.Config.ApiKey
+
 	go func(req models.DiscoveryScanRequest) {
 		client := &http.Client{}
-		jwtToken := h.Config.JWTAuthToken
+
 		items, err := runner.RunDiscoverPipline(req.Targets, func() {
 			keepAliveURL := fmt.Sprintf("%v/api/assets/%d/host-scans/keep-alive/", h.Config.BackendAPIBaseURL, req.AssetID)
 			req, err := http.NewRequest("POST", keepAliveURL, nil)
@@ -39,7 +41,7 @@ func (h *Handler) HostDiscoveryScanHandler(c *gin.Context) {
 				log.Printf("Error creating keep-alive request: %v", err)
 				return
 			}
-			req.Header.Set("Authorization", jwtToken)
+			req.Header.Set("Authorization", apiKey)
 			resp, err := client.Do(req)
 			if err != nil {
 				log.Printf("Error sending keep-alive request: %v", err)
@@ -68,7 +70,7 @@ func (h *Handler) HostDiscoveryScanHandler(c *gin.Context) {
 			return
 		}
 		resultReq.Header.Set("Content-Type", "application/json")
-		resultReq.Header.Set("Authorization", jwtToken)
+		resultReq.Header.Set("Authorization", apiKey)
 
 		resp, err := client.Do(resultReq)
 		if err != nil {
@@ -92,9 +94,11 @@ func (h *Handler) VulnerabilityScanHandler(c *gin.Context) {
 		return
 	}
 
+	apiKey := h.Config.ApiKey
+
 	go func(req models.VulnerScanRequest) {
 		client := &http.Client{}
-		jwtToken := h.Config.JWTAuthToken
+
 		items, err := runner.RunVulnersScan(context.Background(), 1000, req.Targets, func() {
 			keepAliveURL := fmt.Sprintf("%v/api/vulnerability-scans/%d/cves/keep-alive/", h.Config.BackendAPIBaseURL, req.AssetID)
 			req, err := http.NewRequest("POST", keepAliveURL, nil)
@@ -102,7 +106,7 @@ func (h *Handler) VulnerabilityScanHandler(c *gin.Context) {
 				log.Printf("Error creating keep-alive request: %v", err)
 				return
 			}
-			req.Header.Set("Authorization", jwtToken)
+			req.Header.Set("Authorization", apiKey)
 			resp, err := client.Do(req)
 			if err != nil {
 				log.Printf("Error sending keep-alive request: %v", err)
@@ -131,7 +135,7 @@ func (h *Handler) VulnerabilityScanHandler(c *gin.Context) {
 			return
 		}
 		resultReq.Header.Set("Content-Type", "application/json")
-		resultReq.Header.Set("Authorization", jwtToken)
+		resultReq.Header.Set("Authorization", apiKey)
 
 		resp, err := client.Do(resultReq)
 		if err != nil {
